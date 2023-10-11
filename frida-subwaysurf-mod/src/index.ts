@@ -1,8 +1,9 @@
 import "frida-java-menu";
 import { menuIcon } from "./menu-icon.js";
+import { setupTheme } from "./theme.js";
 
 function main() {
-    Menu.theme = Menu.Theme.LGL;
+    setupTheme();
     let menu = new Menu.JavaMenu("Subway Surfers Mod", "modded by rdbo");
     menu.icon(menuIcon, "Normal");
     
