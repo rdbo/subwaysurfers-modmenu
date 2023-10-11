@@ -2,4 +2,5 @@ apk/*
 !apk/my-release-key.keystore
 frida-subwaysurf-mod/node_modules/
 frida-subwaysurf-mod/dist/
-__pycache__
+__pycache__/
+DummyDll/
