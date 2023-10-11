@@ -11,7 +11,9 @@ var menuData = {
     disableCollision: false,
     infJumps: false,
     scoreMultiplier: 1,
-    flashMode: false
+    flashMode: false,
+    freeIAPs: false,
+    unlockCosmetics: false
 };
 
 function main() {
@@ -42,7 +44,17 @@ function main() {
     menu.add(menu.toggle("Flash Mode", function (this: any, state: boolean) : void {
         menuData.flashMode = state;
         console.log("[*] Flash Mode State: " + menuData.flashMode);
-    }))
+    }));
+
+    menu.add(menu.toggle("Free In App Purchases", function (this: any, state: boolean) : void {
+        menuData.freeIAPs = state;
+        console.log("[*] Free IAPs State: " + menuData.freeIAPs);
+    }));
+
+    menu.add(menu.toggle("Unlock Cosmetics", function (this: any, state: boolean) : void {
+        menuData.unlockCosmetics = state;
+        console.log("[*] Unlock Cosmetics State: " + menuData.freeIAPs);
+    }));
 
     menu.add(menu.button(`Score Multiplier: ${menuData.scoreMultiplier}`, function (this: any) {
         const scoreMultBtn = this;
@@ -63,7 +75,33 @@ Il2Cpp.perform(() => {
     const AssemblyCSharp = Il2Cpp.domain.assembly("Assembly-CSharp").image;
     const WalletModel = AssemblyCSharp.class("SYBO.Subway.Meta.WalletModel");
     const CharacterMotor = AssemblyCSharp.class("SYBO.RunnerCore.Character.CharacterMotor");
+    const ScoreMultiplierManager = AssemblyCSharp.class("SYBO.Subway.ScoreMultiplierManager");
+    const CMA = AssemblyCSharp.class("SYBO.RunnerCore.Character.CharacterMotorAbilities");
+    const Currency = AssemblyCSharp.class("SYBO.Subway.Meta.Currency");
+    const AvailableCharacter = AssemblyCSharp.class("SYBO.Subway.Meta.AvailableCharacter");
+    const AvailableBoard = AssemblyCSharp.class("SYBO.Subway.Meta.AvailableBoard");
 
+
+    
+    const GraphicsController = AssemblyCSharp.class("SYBO.Subway.CharacterGraphicsController");
+    const Power = AssemblyCSharp.class("SYBO.RunnerCore.Powers.Power");
+    const CoreRunnerManager = AssemblyCSharp.class("SYBO.Subway.Meta.CoreRunner.CoreRunnerManager");
+
+    // Power.method("Expire").implementation = function () { return; };
+    Power.method("UpdatePower").implementation = function () {
+        this.method("SetOffCooldown").invoke();
+        this.method("Activate").invoke();
+        return;
+    }
+
+    CoreRunnerManager.method("StartRun").implementation = function () {
+        this.method("StartRun").invoke();
+        Il2Cpp.gc.choose(Power).forEach((instance) => {
+            console.log(instance);
+            instance.method("Activate").invoke();
+        })
+    }
+   
     // Hooks
 
     // Infinite Currency
@@ -90,14 +128,12 @@ Il2Cpp.perform(() => {
     };
 
     // Score Multiplier
-    const ScoreMultiplierManager = AssemblyCSharp.class("SYBO.Subway.ScoreMultiplierManager");
     ScoreMultiplierManager.method("get_BaseMultiplierSum").implementation = function () {
         if (menuData.enable) return menuData.scoreMultiplier;
         return this.method<number>("get_BaseMultiplierSum").invoke();
     };
 
     // Flash Mode
-    const CMA = AssemblyCSharp.class("SYBO.RunnerCore.Character.CharacterMotorAbilities");
     CMA.method("get_MinSpeed").implementation = function () {
         if (menuData.enable && menuData.flashMode) return 2000;
         return this.method<number>("get_MinSpeed").invoke();
@@ -112,4 +148,41 @@ Il2Cpp.perform(() => {
         if (menuData.enable && menuData.flashMode) return -500;
         return this.method<number>("get_DiveSpeed").invoke();
     }
+
+    // Free IAPs
+    Currency.method("get_IsIAP").implementation = function () {
+        if (menuData.enable && menuData.freeIAPs) return false;
+        return this.method<boolean>("get_IsIAP").invoke();
+    }
+
+    // Unlock Cosmetics
+    AvailableCharacter.method("get_IsOwned").implementation = function () {
+        if (menuData.enable && menuData.unlockCosmetics) return true;
+        return this.method<boolean>("get_IsOwned").invoke();
+    };
+
+    AvailableCharacter.method("IsOutfitOwned").implementation = function (outfitId) {
+        if (menuData.enable && menuData.unlockCosmetics) return true;
+        return this.method<boolean>("IsOutfitOwned").invoke(outfitId);
+    };
+
+    AvailableCharacter.method("IsSkinOwned").implementation = function (skinId) {
+        if (menuData.enable && menuData.unlockCosmetics) return true;
+        return this.method<boolean>("IsSkinOwned").invoke(skinId);
+    };
+
+    AvailableBoard.method("get_IsOwned").implementation = function () {
+        if (menuData.enable && menuData.unlockCosmetics) return true;
+        return this.method<boolean>("get_IsOwned").invoke();
+    };
+
+    AvailableBoard.method("IsUpgradeOwned").implementation = function (upgradeId) {
+        if (menuData.enable && menuData.unlockCosmetics) return true;
+        return this.method<boolean>("IsUpgradeOwned").invoke(upgradeId);
+    };
+
+    AvailableBoard.method("IsSkinOwned").implementation = function (skinId) {
+        if (menuData.enable && menuData.unlockCosmetics) return true;
+        return this.method<boolean>("IsSkinOwned").invoke(skinId);
+    };
 });
