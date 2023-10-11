@@ -1,0 +1,3 @@
+[submodule "frida-java-menu"]
+	path = frida-java-menu
+	url = https://github.com/commonuserlol/frida-java-menu
