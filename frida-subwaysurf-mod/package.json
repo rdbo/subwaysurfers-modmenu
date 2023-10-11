@@ -1,0 +1,21 @@
+{
+  "name": "frida-subwaysurf-mod",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "frida-compile src/index.ts -o dist/agent.js -c",
+    "watch": "frida-compile src/index.ts -o dist/agent.js -w",
+    "spawn": "frida -U -f com.kiloo.subwaysurf -l dist/agent.js --kill-on-exit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "@types/frida-gum": "^18.4.3",
+    "@types/node": "^20.8.4",
+    "frida-compile": "^16.3.0",
+    "frida-il2cpp-bridge": "^0.9.0",
+    "typescript": "^5.2.2"
+  }
+}
