@@ -4,20 +4,7 @@ import subprocess
 import lzma
 import requests
 import re
-
-SUBWAY_VER = "3.19.0"
-FRIDA_VER = "16.1.4"
-SUBWAY_DIR = f"./apk"
-SUBWAY_APK = f"com.kiloo.subwaysurf_{SUBWAY_VER}.apk"
-SUBWAY_APK_PATH = f"{SUBWAY_DIR}/{SUBWAY_APK}"
-GADGETS_DIR = f"{SUBWAY_DIR}/gadgets"
-APKTOOL_OUT_DIR = f"{SUBWAY_DIR}/subwaysurf_{SUBWAY_VER}"
-GADGET_ARM64 = "frida-gadget-android-arm64.so"
-GADGET_ARM = "frida-gadget-android-arm.so"
-GADGET_ARM64_PATH = f"{GADGETS_DIR}/{GADGET_ARM64}"
-GADGET_ARM_PATH = f"{GADGETS_DIR}/{GADGET_ARM}"
-GADGET_NAME = "libfrida-gadget.so"
-GADGET_CONFIG_NAME = "libfrida-gadget.config.so"
+from config import *
 
 def download_file(url, output):
     resp = requests.get(url)
@@ -46,12 +33,7 @@ if not os.path.exists(f"{GADGETS_DIR}"):
     extract_xz(f"{GADGETS_DIR}/{GADGET_ARM64}.xz", f"{GADGETS_DIR}/{GADGET_ARM64}")
     extract_xz(f"{GADGETS_DIR}/{GADGET_ARM}.xz", f"{GADGETS_DIR}/{GADGET_ARM}")
 
-required_cmds = ["apktool"]
-for cmd in required_cmds:
-    print(f"[*] Checking if '{cmd}' exists...")
-    if shutil.which(cmd) is None:
-        print(f"[!] Missing command: {cmd}. Try installing it before running this script.")
-        exit(1)
+check_commands()
 
 if os.path.exists(APKTOOL_OUT_DIR):
     print(f"[!] The APK has already been patched: directory '{APKTOOL_OUT_DIR}' already exists")
@@ -88,7 +70,7 @@ with open(f"{APKTOOL_OUT_DIR}/AndroidManifest.xml", "w") as file:
 print("[*] Added permission to manifest file")
 
 print("[*] Creating debug copy of APK (SYSTEM_ALERT_WINDOW patch, frida not included)...")
-subprocess.run(["apktool", "b", APKTOOL_OUT_DIR, "-o", f"{SUBWAY_DIR}/subwaysurf-debug.apk"])
+build_apk(f"{SUBWAY_DIR}/subwaysurf-debug.apk")
 
 main_activity_smali = f"{APKTOOL_OUT_DIR}/smali_classes3/" + main_activity.replace('.', '/') + ".smali"
 print("[*] Main Activity smali file: " + main_activity_smali)
