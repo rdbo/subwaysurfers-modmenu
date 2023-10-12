@@ -13,7 +13,8 @@ var menuData = {
     scoreMultiplier: 1,
     flashMode: false,
     freeIAPs: false,
-    unlockCosmetics: false
+    unlockCosmetics: false,
+    infPowers: false
 };
 
 function main() {
@@ -56,6 +57,11 @@ function main() {
         console.log("[*] Unlock Cosmetics State: " + menuData.freeIAPs);
     }));
 
+    menu.add(menu.toggle("Infinite Powers", function (this: any, state: boolean) : void {
+        menuData.infPowers = state;
+        console.log("[*] Infinite Powers State: " + menuData.infPowers);
+    }));
+
     menu.add(menu.button(`Score Multiplier: ${menuData.scoreMultiplier}`, function (this: any) {
         const scoreMultBtn = this;
         menu.inputNumber("Score Multiplier", 999999999, function (this: any, state: number) : void {
@@ -80,27 +86,10 @@ Il2Cpp.perform(() => {
     const Currency = AssemblyCSharp.class("SYBO.Subway.Meta.Currency");
     const AvailableCharacter = AssemblyCSharp.class("SYBO.Subway.Meta.AvailableCharacter");
     const AvailableBoard = AssemblyCSharp.class("SYBO.Subway.Meta.AvailableBoard");
-
-
-    
-    const GraphicsController = AssemblyCSharp.class("SYBO.Subway.CharacterGraphicsController");
+    const CharacterGraphicsController = AssemblyCSharp.class("SYBO.Subway.CharacterGraphicsController");
     const Power = AssemblyCSharp.class("SYBO.RunnerCore.Powers.Power");
     const CoreRunnerManager = AssemblyCSharp.class("SYBO.Subway.Meta.CoreRunner.CoreRunnerManager");
-
-    // Power.method("Expire").implementation = function () { return; };
-    Power.method("UpdatePower").implementation = function () {
-        this.method("SetOffCooldown").invoke();
-        this.method("Activate").invoke();
-        return;
-    }
-
-    CoreRunnerManager.method("StartRun").implementation = function () {
-        this.method("StartRun").invoke();
-        Il2Cpp.gc.choose(Power).forEach((instance) => {
-            console.log(instance);
-            instance.method("Activate").invoke();
-        })
-    }
+    const PowerupEventController = AssemblyCSharp.class("SYBO.Subway.PowerupEventController");
    
     // Hooks
 
@@ -185,4 +174,35 @@ Il2Cpp.perform(() => {
         if (menuData.enable && menuData.unlockCosmetics) return true;
         return this.method<boolean>("IsSkinOwned").invoke(skinId);
     };
+
+    // Infinite Powers
+    Power.method("UpdatePower").implementation = function () {
+        if (!menuData.enable || !menuData.infPowers) {
+            this.method("UpdatePower").invoke();
+            return;
+        }
+
+        this.method("SetOffCooldown").invoke();
+
+        const allowedPowerList = ['"Hoverboard"', '"SuperSneakers"', '"Magnet"', '"DoubleScore"'];
+        const power : string = this.method<Il2Cpp.String>("get_PowerId").invoke().toString();
+        if (!allowedPowerList.includes(power)) {
+            // Call original function if the power shouldn't be infinite
+            this.method("UpdatePower").invoke();
+        }
+
+        return;
+    };
+
+    CharacterGraphicsController.method("OnStartRunTransition").implementation = function () {
+        this.method("OnStartRunTransition").invoke();
+        if (!menuData.enable || !menuData.infPowers) return;
+
+        Il2Cpp.gc.choose(PowerupEventController).forEach((instance) => {
+            instance.method("HandleSuperSneakersPickedUp").invoke();
+            instance.method("HandleDoubleScorePickedUp").invoke();
+            instance.method("HandleActivateHoverboard").invoke();
+            instance.method("HandleMagnetPickedUp").invoke();
+        });
+    }
 });
