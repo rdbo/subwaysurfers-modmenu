@@ -1,6 +1,9 @@
 # Subway Surfers Mod Menu
 Subway Surfers Mod Menu for Android
 
+# Warning
+This is for educational purposes only!
+
 # License
 This project is licensed under the GNU AGPL v3.0.
 
